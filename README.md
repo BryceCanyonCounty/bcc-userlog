@@ -9,9 +9,9 @@
 - **Automatic Resets**: Leaderboards reset automatically at the end of each day, week, and month.
 - **Historical Data**: Stores historical leaderboard data for administrative review.
 - **Player Commands**:
-  - `/ore` – Shows your total accumulated playtime.
-  - `/ultimasesiune` – Displays details about your last game session.
-  - `/clasament` – Opens the leaderboard menu to view top players.
+  - `/playtime` – Shows your total accumulated playtime.
+  - `/lastsession` – Displays details about your last game session.
+  - `/leaderboard` – Opens the leaderboard menu to view top players.
 - **Admin Commands**:
   - `/userlog` – Opens the user log system with detailed player information (admin access only).
 - **Player Details**: Administrators can view detailed information about players, including identifiers, playtime, and account status.
