@@ -119,15 +119,7 @@ function openUserLogMenu()
         style = {},
         slot = 'header'
     })
-
-    -- Button to open Leaderboard History
-    userLogMenu:RegisterElement('button', {
-        label = _U('leaderboardHistory'),
-        style = {},
-    }, function()
-        openLeaderboardHistoryMenu() -- Opens the leaderboard history menu
-    end)
-
+    
     -- Button to open Player List
     userLogMenu:RegisterElement('button', {
         label = _U('playerList'),
@@ -211,83 +203,161 @@ end
 function openLeaderboardHistoryMenu()
     devPrint("Opening leaderboard history menu.")
 
+    -- Register and configure the leaderboard history page
     local leaderboardHistoryMenu = BCCUserLogMenu:RegisterPage("bcc-userlog:LeaderboardHistoryPage")
 
-    -- Header for Leaderboard History
+    -- Register Header Element
     leaderboardHistoryMenu:RegisterElement('header', {
         value = _U('leaderboardHistory'),
+        slot = 'header',
+        style = {
+            fontSize = '24px',
+            textAlign = 'center',
+            color = '#FFD700',
+            padding = '10px'
+        }
+    })
+
+    -- Daily leaderboard button
+    leaderboardHistoryMenu:RegisterElement('button', {
+        label = _U('yesterdayHistory'),
+        style = {}
+    }, function()
+        devPrint("Daily history button clicked.")
+        TriggerServerEvent('bcc-userlog:fetchLeaderboardHistory', "daily")
+    end)
+
+    -- Weekly leaderboard button
+    leaderboardHistoryMenu:RegisterElement('button', {
+        label = _U('weeklyHistory'),
+        style = {}
+    }, function()
+        devPrint("Weekly history button clicked.")
+        TriggerServerEvent('bcc-userlog:fetchLeaderboardHistory', "weekly")
+    end)
+
+    -- Monthly leaderboard button
+    leaderboardHistoryMenu:RegisterElement('button', {
+        label = _U('monthlyHistory'),
+        style = {}
+    }, function()
+        devPrint("Monthly history button clicked.")
+        TriggerServerEvent('bcc-userlog:fetchLeaderboardHistory', "monthly")
+    end)
+
+    -- Footer elements
+    leaderboardHistoryMenu:RegisterElement('line', {
+        style = {},
+        slot = "footer"
+    })
+
+    leaderboardHistoryMenu:RegisterElement('button', {
+        label = _U("backToLeaderboard"),
+        slot = "footer",
+        style = {}
+    }, function()
+        devPrint("Back to leaderboard button clicked.")
+        TriggerEvent('bcc-userlog:openMainLeaderboardMenu')
+    end)
+
+    leaderboardHistoryMenu:RegisterElement('bottomline', {
+        style = {},
+        slot = "footer"
+    })
+
+    -- Open the menu
+    devPrint("Opening leaderboard history menu interface.")
+    BCCUserLogMenu:Open({ startupPage = leaderboardHistoryMenu })
+end
+
+RegisterNetEvent('bcc-userlog:displayLeaderboardHistory', function(leaderboardData, title)
+    local leaderboardMenu = BCCUserLogMenu:RegisterPage("bcc-userlog:LeaderboardHistoryPage")
+
+    -- Set the header/title for the menu
+    leaderboardMenu:RegisterElement('header', {
+        value = title or _U("leaderboard_history"),
         slot = 'header',
         style = { fontSize = '24px', textAlign = 'center', color = '#FFD700' }
     })
 
-    -- Buttons for Daily, Weekly, and Monthly Leaderboards
-    leaderboardHistoryMenu:RegisterElement('button', {
-        label = _U('yesterdayHistory'),
-        style = {},
-    }, function()
-        TriggerServerEvent('bcc-userlog:fetchLeaderboardHistory', "daily")
-    end)
-
-    leaderboardHistoryMenu:RegisterElement('button', {
-        label = _U('weeklyHistory'),
-        style = {},
-    }, function()
-        TriggerServerEvent('bcc-userlog:fetchLeaderboardHistory', "weekly")
-    end)
-
-    leaderboardHistoryMenu:RegisterElement('button', {
-        label = _U('monthlyHistory'),
-        style = {},
-    }, function()
-        TriggerServerEvent('bcc-userlog:fetchLeaderboardHistory', "monthly")
-    end)
-
-    -- Open the leaderboard history menu
-    BCCUserLogMenu:Open({ startupPage = leaderboardHistoryMenu })
-end
-
-RegisterNetEvent('bcc-userlog:displayLeaderboardHistory')
-AddEventHandler('bcc-userlog:displayLeaderboardHistory', function(leaderboardData, title)
-    local leaderboardTitle = tostring(title or _U("leaderboardHistory"))
-    local leaderboardHTML = string.format([[<div style="padding: 20px;"><h2 style="text-align: center; color: #FFD700;">%s</h2><table style="width: 100%; border-collapse: collapse;">]], leaderboardTitle)
-
-    leaderboardHTML = leaderboardHTML .. [[
-        <tr style="text-align: left; border-bottom: 1px solid #DDD;">
-            <th style="padding: 10px;">]] .. _U("rank") .. [[</th>
-            <th style="padding: 10px;">]] .. _U("player") .. [[</th>
-            <th style="padding: 10px; text-align: right;">]] .. _U("playtime") .. [[</th>
-        </tr>
+    -- Define HTML content for the leaderboard history
+    local leaderboardHTML = [[
+    <div style="padding: 40px;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr style="text-align: left;">
+                <th style="padding: 10px; color: #FFD700;">]] .. _U("rank") .. [[</th>
+                <th style="padding: 10px; color: #FFD700;">]] .. _U("player") .. [[</th>
+                <th style="padding: 10px; text-align: right; color: #FFD700;">]] .. _U("playtime") .. [[</th>
+            </tr>
     ]]
 
-    -- Check if leaderboardData contains any records
     if leaderboardData and #leaderboardData > 0 then
         for i, player in ipairs(leaderboardData) do
-            local playerName = tostring(player.player_displayName or _U("unknown_user"))
-            local playTime = tonumber(player.playtime) or 0
-            local hours = math.floor(playTime / 3600)
-            local minutes = math.floor((playTime % 3600) / 60)
-            local seconds = playTime % 60
-            local formattedPlayTime = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+            local playerName = player.player_displayName or _U("unknown_user")
+            local playtime = tonumber(player.playtime) or 0
+
+            -- Format playtime as hours, minutes, and seconds
+            local hours = math.floor(playtime / 3600)
+            local minutes = math.floor((playtime % 3600) / 60)
+            local seconds = playtime % 60
+            local formattedPlaytime = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+
+            -- Alternate row colors with opacity
+            local rowColor = i % 2 == 0 and "rgba(249, 249, 249, 0.3)" or "rgba(239, 239, 239, 0.3)"
 
             -- Add each player's row to the table
-            leaderboardHTML = leaderboardHTML .. string.format([[<tr style="background-color: rgba(249, 249, 249, 0.3);"><td style="padding: 10px;">%d</td><td style="padding: 10px;">%s</td><td style="padding: 10px; text-align: right;">%s</td></tr>]], i, playerName, formattedPlayTime)
+            leaderboardHTML = leaderboardHTML .. string.format([[<tr style="background-color: %s;">
+                <td style="padding: 8px;">%d</td>
+                <td style="padding: 8px;">%s</td>
+                <td style="padding: 8px; text-align: right;">%s</td>
+            </tr>]], rowColor, i, playerName, formattedPlaytime)
         end
     else
-        -- Display a message if no data is available
-        leaderboardHTML = leaderboardHTML .. [[<tr><td colspan="3" style="padding: 10px; text-align: center; color: #999;">]] .. _U("no_data_available") .. [[</td></tr>]]
+        leaderboardHTML = leaderboardHTML .. [[
+        <tr>
+            <td colspan="3" style="padding: 10px; text-align: center; color: #999;">]] .. _U("no_data_available") .. [[</td>
+        </tr>
+    ]]
     end
 
+    -- Close the table and div
     leaderboardHTML = leaderboardHTML .. "</table></div>"
 
-    -- Display the leaderboard data in the menu
-    local leaderboardHistoryMenu = BCCUserLogMenu:RegisterPage("bcc-userlog:LeaderboardHistoryPage")
-    leaderboardHistoryMenu:RegisterElement('html', {
-        value = leaderboardHTML,
+    -- Register HTML content in Feather Menu
+    leaderboardMenu:RegisterElement("html", {
+        value = { leaderboardHTML },
         slot = 'content',
-        style = {}
+        style = { padding = '10px' }
     })
-    
-    BCCUserLogMenu:Open({ startupPage = leaderboardHistoryMenu })
+
+    -- Add footer elements
+    leaderboardMenu:RegisterElement('line', {
+        style = {},
+        slot = "footer"
+    })
+
+    -- Register the "Back to Main Menu" button
+    leaderboardMenu:RegisterElement('button', {
+        label = _U("backToLeaderboard"),
+        slot = "footer",
+        style = {}
+    }, function()
+        openLeaderboardHistoryMenu()
+    end)
+
+    leaderboardMenu:RegisterElement('bottomline', {
+        style = {},
+        slot = "footer"
+    })
+
+    leaderboardMenu:RegisterElement('textdisplay', {
+        value = _U("additionalInfo"),
+        style = { fontSize = '20px', textAlign = 'center', padding = '10px' },
+        slot = "footer"
+    })
+
+    -- Open the leaderboard history menu
+    BCCUserLogMenu:Open({ startupPage = leaderboardMenu })
 end)
 
 function openUserDetailsMenu(user)
@@ -419,6 +489,25 @@ AddEventHandler('bcc-userlog:openMainLeaderboardMenu', function()
         TriggerServerEvent('bcc-userlog:requestLeaderboardData', "monthly")
     end)
 
+    mainLeaderboardMenu:RegisterElement('line', {
+        style = {},
+        slot = "footer"
+    })
+
+    -- Button to open Leaderboard History
+    mainLeaderboardMenu:RegisterElement('button', {
+        label = _U('leaderboardHistory'),
+        slot = "footer",
+        style = {},
+    }, function()
+        openLeaderboardHistoryMenu() -- Opens the leaderboard history menu
+    end)
+
+    mainLeaderboardMenu:RegisterElement('bottomline', {
+        style = {},
+        slot = "footer"
+    })
+
     -- Open the main leaderboard menu
     BCCUserLogMenu:Open({ startupPage = mainLeaderboardMenu })
 end)
@@ -487,7 +576,6 @@ function displayLeaderboardMenu(leaderboardData, leaderboardTitle)
         slot = "footer"
     })
 
-    -- Register the "Back to Leaderboard" button
     leaderboardMenu:RegisterElement('button', {
         label = _U("backToLeaderboard"),
         slot = "footer",
@@ -510,3 +598,9 @@ function displayLeaderboardMenu(leaderboardData, leaderboardTitle)
     -- Open the leaderboard menu
     BCCUserLogMenu:Open({ startupPage = leaderboardMenu })
 end
+--- Cleanup/ deletion on leave ----
+AddEventHandler("onResourceStop", function(resource)
+    if resource == GetCurrentResourceName() then
+        BCCUserLogMenu:Close()
+    end
+end)

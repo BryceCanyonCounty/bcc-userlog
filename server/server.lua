@@ -56,13 +56,14 @@ function UpdateAllPlayerPlaytime()
                 -- Directly increment playtimes in one update query
                 MySQL.update(
                     'UPDATE bcc_player_connections SET players_playTime = players_playTime + ?, players_dailyPlayTime = players_dailyPlayTime + ?, players_weeklyPlayTime = players_weeklyPlayTime + ?, players_monthlyPlayTime = players_monthlyPlayTime + ? WHERE license = ?',
-                    { sessionPlayTimeMinutes, sessionPlayTimeMinutes, sessionPlayTimeMinutes, sessionPlayTimeMinutes, license },
+                    { sessionPlayTimeMinutes, sessionPlayTimeMinutes, sessionPlayTimeMinutes, sessionPlayTimeMinutes,
+                        license },
                     function(affectedRows)
-                                if affectedRows > 0 then
+                        if affectedRows > 0 then
                             devPrint("Successfully updated playtime for license: " .. license)
-                                else
+                        else
                             devPrint("Failed to update playtime for license: " .. license)
-                                end
+                        end
                     end
                 )
             else
@@ -99,36 +100,38 @@ end)
 function UpdateDailyPlaytime(license, playTime)
     MySQL.update('UPDATE bcc_player_connections SET players_dailyPlayTime = players_dailyPlayTime + ? WHERE license = ?',
         { playTime, license }, function(affectedRows)
-        if affectedRows > 0 then
-            devPrint("Successfully updated daily playtime for license: " .. license)
-        else
-            devPrint("Failed to update daily playtime for license: " .. license)
-        end
-    end)
+            if affectedRows > 0 then
+                devPrint("Successfully updated daily playtime for license: " .. license)
+            else
+                devPrint("Failed to update daily playtime for license: " .. license)
+            end
+        end)
 end
 
 -- Update weekly playtime for a specific license
 function UpdateWeeklyPlaytime(license, playTime)
-    MySQL.update('UPDATE bcc_player_connections SET players_weeklyPlayTime = players_weeklyPlayTime + ? WHERE license = ?',
+    MySQL.update(
+        'UPDATE bcc_player_connections SET players_weeklyPlayTime = players_weeklyPlayTime + ? WHERE license = ?',
         { playTime, license }, function(affectedRows)
-        if affectedRows > 0 then
-            devPrint("Successfully updated weekly playtime for license: " .. license)
-        else
-            devPrint("Failed to update weekly playtime for license: " .. license)
-        end
-    end)
+            if affectedRows > 0 then
+                devPrint("Successfully updated weekly playtime for license: " .. license)
+            else
+                devPrint("Failed to update weekly playtime for license: " .. license)
+            end
+        end)
 end
 
 -- Update monthly playtime for a specific license
 function UpdateMonthlyPlaytime(license, playTime)
-    MySQL.update('UPDATE bcc_player_connections SET players_monthlyPlayTime = players_monthlyPlayTime + ? WHERE license = ?',
+    MySQL.update(
+        'UPDATE bcc_player_connections SET players_monthlyPlayTime = players_monthlyPlayTime + ? WHERE license = ?',
         { playTime, license }, function(affectedRows)
-        if affectedRows > 0 then
-            devPrint("Successfully updated monthly playtime for license: " .. license)
-        else
-            devPrint("Failed to update monthly playtime for license: " .. license)
-        end
-    end)
+            if affectedRows > 0 then
+                devPrint("Successfully updated monthly playtime for license: " .. license)
+            else
+                devPrint("Failed to update monthly playtime for license: " .. license)
+            end
+        end)
 end
 
 -- Handle player connecting and check database for existing record
@@ -177,17 +180,18 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
         if result and #result > 0 then
             MySQL.update('UPDATE bcc_player_connections SET players_tsLastConnection = ? WHERE id = ?',
                 { tsLastConnection, result[1].id }, function(affectedRows)
-                ---devPrint(message)
-            end)
+                    ---devPrint(message)
+                end)
         else
             local playTime, tsJoined = 0, os.time()
-            MySQL.insert('INSERT INTO bcc_player_connections (license, discord_id, steam_id, fivem_id, license2, live_id, xbl_id, players_displayName, players_playTime, players_tsJoined, players_tsLastConnection) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            MySQL.insert(
+                'INSERT INTO bcc_player_connections (license, discord_id, steam_id, fivem_id, license2, live_id, xbl_id, players_displayName, players_playTime, players_tsJoined, players_tsLastConnection) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 {
                     identifiers.license, identifiers.discord, identifiers.steam, identifiers.fivem, identifiers.license2,
                     identifiers.live, identifiers.xbl, playerName, playTime, tsJoined, tsLastConnection
                 }, function(id)
-                --devPrint(message)
-            end)
+                    --devPrint(message)
+                end)
         end
     end)
 end)
@@ -212,8 +216,9 @@ AddEventHandler('playerDropped', function(reason)
         local sessionTime = string.format("%02d:%02d:%02d", hours, minutes, seconds)
 
         -- Update only the last session time and total playtime in the database
-        MySQL.update('UPDATE bcc_player_connections SET players_lastSessionTime = ?, players_playTime = players_playTime + ?, players_tsLastConnection = ? WHERE license = ?',
-            { sessionDuration, sessionDuration, sessionEndTime, identifiers.license }, 
+        MySQL.update(
+            'UPDATE bcc_player_connections SET players_lastSessionTime = ?, players_playTime = players_playTime + ?, players_tsLastConnection = ? WHERE license = ?',
+            { sessionDuration, sessionDuration, sessionEndTime, identifiers.license },
             function(affectedRows)
                 if affectedRows > 0 then
                     devPrint("Successfully logged session time for license: " .. identifiers.license)
@@ -236,7 +241,7 @@ AddEventHandler('playerDropped', function(reason)
         local message = string.format("👋 Player **%s** disconnected. Reason: %s\n%s\nSession Duration: `%s`",
             playerName or "Unknown", reason, identifierInfo, sessionTime)
         discordWebhook:sendMessage(message)
-        
+
         -- Remove the player from session tracking
         playerSessionStart[identifiers.license] = nil
     end
@@ -254,7 +259,7 @@ RegisterCommand(Config.playTimeCommad, function(source, args, rawCommand)
 
                 -- Calculate current session time if player is still connected
                 local sessionStart = playerSessionStart[identifiers.license] and
-                playerSessionStart[identifiers.license].connectTime
+                    playerSessionStart[identifiers.license].connectTime
                 local currentSessionTime = 0
 
                 if sessionStart then
@@ -269,7 +274,9 @@ RegisterCommand(Config.playTimeCommad, function(source, args, rawCommand)
                 local hours = math.floor((combinedPlayTime % 1440) / 60)
                 local minutes = combinedPlayTime % 60
 
-                Core.NotifyObjective(_source, _U('total_playtime_message') .. days .. _U('totalDays') .. hours .. _U('totalHours').. minutes.. _U('totalMintutes'), 4000)
+                Core.NotifyObjective(_source,
+                    _U('total_playtime_message') ..
+                    days .. _U('totalDays') .. hours .. _U('totalHours') .. minutes .. _U('totalMintutes'), 4000)
             else
                 Core.NotifyObjective(_source, _U("playtime_not_found_message"), 4000)
             end
@@ -281,23 +288,25 @@ RegisterCommand(Config.lastSessioncommand, function(source, args, rawCommand)
     local identifiers = GetPlayerIdentifiersData(_source)
 
     -- Query the last session time for the player
-    MySQL.query('SELECT players_lastSessionTime FROM bcc_player_connections WHERE license = ?', { identifiers.license }, function(result)
-        if result and #result > 0 then
-            local lastSessionTime = result[1].players_lastSessionTime or 0
+    MySQL.query('SELECT players_lastSessionTime FROM bcc_player_connections WHERE license = ?', { identifiers.license },
+        function(result)
+            if result and #result > 0 then
+                local lastSessionTime = result[1].players_lastSessionTime or 0
 
-            -- Convert the session time from seconds to hours, minutes, and seconds
-            local hours = math.floor(lastSessionTime / 3600)
-            local minutes = math.floor((lastSessionTime % 3600) / 60)
-            local seconds = lastSessionTime % 60
+                -- Convert the session time from seconds to hours, minutes, and seconds
+                local hours = math.floor(lastSessionTime / 3600)
+                local minutes = math.floor((lastSessionTime % 3600) / 60)
+                local seconds = lastSessionTime % 60
 
-            local formattedTime = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+                local formattedTime = string.format("%02d:%02d:%02d", hours, minutes, seconds)
 
-            -- Send the formatted session time to the player
-            Core.NotifyObjective(_source, "Your last session playtime was: " .. formattedTime, 4000)
-        else
-            Core.NotifyObjective(_source, "Could not retrieve your last session time. Please ensure you are registered in the database.", 4000)
-        end
-    end)
+                -- Send the formatted session time to the player
+                Core.NotifyObjective(_source, "Your last session playtime was: " .. formattedTime, 4000)
+            else
+                Core.NotifyObjective(_source,
+                    "Could not retrieve your last session time. Please ensure you are registered in the database.", 4000)
+            end
+        end)
 end, false)
 
 RegisterCommand(Config.leaderboard, function(source, args, rawCommand)
@@ -311,13 +320,16 @@ AddEventHandler('bcc-userlog:requestLeaderboardData', function(leaderboardType)
     local title = ""
 
     if leaderboardType == "daily" then
-        query = 'SELECT players_displayName, players_dailyPlayTime FROM bcc_player_connections ORDER BY players_dailyPlayTime DESC LIMIT 30'
+        query =
+        'SELECT players_displayName, players_dailyPlayTime FROM bcc_player_connections ORDER BY players_dailyPlayTime DESC LIMIT 30'
         title = "Daily Leaderboard"
     elseif leaderboardType == "weekly" then
-        query = 'SELECT players_displayName, players_weeklyPlayTime FROM bcc_player_connections ORDER BY players_weeklyPlayTime DESC LIMIT 30'
+        query =
+        'SELECT players_displayName, players_weeklyPlayTime FROM bcc_player_connections ORDER BY players_weeklyPlayTime DESC LIMIT 30'
         title = "Weekly Leaderboard"
     elseif leaderboardType == "monthly" then
-        query = 'SELECT players_displayName, players_monthlyPlayTime FROM bcc_player_connections ORDER BY players_monthlyPlayTime DESC LIMIT 30'
+        query =
+        'SELECT players_displayName, players_monthlyPlayTime FROM bcc_player_connections ORDER BY players_monthlyPlayTime DESC LIMIT 30'
         title = "Monthly Leaderboard"
     end
 
@@ -327,85 +339,113 @@ AddEventHandler('bcc-userlog:requestLeaderboardData', function(leaderboardType)
     end)
 end)
 
-RegisterNetEvent('bcc-userlog:fetchLeaderboardHistory')
-AddEventHandler('bcc-userlog:fetchLeaderboardHistory', function(historyType)
-    local source = source
+RegisterNetEvent('bcc-userlog:fetchLeaderboardHistory', function(historyType)
+    local sourcePlayer = source
 
-    -- Ensure historyType is valid
-    local query, title
-    if historyType == "daily" then
-        query = "SELECT player_displayName, playtime FROM bcc_leaderboard_history WHERE leaderboard_type = 'daily' AND DATE(recorded_at) = CURDATE() - INTERVAL 1 DAY ORDER BY playtime DESC LIMIT 30"
-        title = "Yesterday's Daily Leaderboard"
-    elseif historyType == "weekly" then
-        query = "SELECT player_displayName, playtime FROM bcc_leaderboard_history WHERE leaderboard_type = 'weekly' AND recorded_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) ORDER BY playtime DESC LIMIT 30"
-        title = "Last Week's Weekly Leaderboard"
-    elseif historyType == "monthly" then
-        query = "SELECT player_displayName, playtime FROM bcc_leaderboard_history WHERE leaderboard_type = 'monthly' AND recorded_at >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH) ORDER BY playtime DESC LIMIT 30"
-        title = "Last Month's Monthly Leaderboard"
-    else
-        -- Log an error if historyType is not valid and return early
-        print("Invalid historyType received:", historyType)
-        TriggerClientEvent('bcc-userlog:displayLeaderboardHistory', source, {}, "Invalid Leaderboard History Type")
+    local queries = {
+        daily = {
+            query = [[
+                SELECT player_displayName, playtime, recorded_at
+                FROM bcc_leaderboard_history
+                WHERE leaderboard_type = 'daily'
+                ORDER BY recorded_at DESC, playtime DESC LIMIT 30
+            ]],
+            title = "Yesterday's Daily Leaderboard"
+        },
+        weekly = {
+            query = [[
+                SELECT player_displayName, playtime, recorded_at
+                FROM bcc_leaderboard_history
+                WHERE leaderboard_type = 'weekly'
+                ORDER BY recorded_at DESC, playtime DESC LIMIT 30
+            ]],
+            title = "Last Week's Weekly Leaderboard"
+        },
+        monthly = {
+            query = [[
+                SELECT player_displayName, playtime, recorded_at
+                FROM bcc_leaderboard_history
+                WHERE leaderboard_type = 'monthly'
+                ORDER BY recorded_at DESC, playtime DESC LIMIT 30
+            ]],
+            title = "Last Month's Monthly Leaderboard"
+        }
+    }
+
+    local leaderboardInfo = queries[historyType]
+
+    if not leaderboardInfo then
+        print(string.format("[BCC-UserLog] Invalid leaderboard type requested: %s", tostring(historyType)))
+        TriggerClientEvent('bcc-userlog:displayLeaderboardHistory', sourcePlayer, {}, "Invalid Leaderboard Type")
         return
     end
 
-    -- Execute the query and send results to the client
-    MySQL.insert(query, {}, function(results)
+    print(string.format("[BCC-UserLog] Fetching %s leaderboard data...", historyType))
+
+    MySQL.query(leaderboardInfo.query, {}, function(results)
         if results and #results > 0 then
-            -- Log results for debugging
-            print("Sending leaderboard data to client:", json.encode(results))
-            TriggerClientEvent('bcc-userlog:displayLeaderboardHistory', source, results, title)
+            -- Format playtime into days, hours, and minutes
+            for _, result in ipairs(results) do
+                local playtime = tonumber(result.playtime) or 0
+                local days = math.floor(playtime / 86400)
+                local hours = math.floor((playtime % 86400) / 3600)
+                local minutes = math.floor((playtime % 3600) / 60)
+                result.formattedPlaytime = string.format("%d days, %02d hours, %02d minutes", days, hours, minutes)
+            end
+            TriggerClientEvent('bcc-userlog:displayLeaderboardHistory', sourcePlayer, results, leaderboardInfo.title)
         else
-            print("No leaderboard data found for:", historyType)
-            TriggerClientEvent('bcc-userlog:displayLeaderboardHistory', source, {}, title)  -- Send empty data if none found
+            TriggerClientEvent('bcc-userlog:displayLeaderboardHistory', sourcePlayer, {}, leaderboardInfo.title)
         end
     end)
 end)
 
--- Daily Reset Thread
-Citizen.CreateThread(function()
+CreateThread(function()
     while true do
-        Citizen.Wait(86400000)  -- 24-hour interval for daily reset
-
-        -- Record daily leaderboard to history
-        MySQL.insert("INSERT INTO bcc_leaderboard_history (player_id, player_displayName, playtime, leaderboard_type) " ..
-                    "SELECT id, players_displayName, players_dailyPlayTime, 'daily' FROM bcc_player_connections WHERE players_dailyPlayTime > 0")
-
-        -- Reset daily playtime
-        MySQL.update("UPDATE bcc_player_connections SET players_dailyPlayTime = 0")
-
-        print("Daily playtime reset and snapshot completed.")
-    end
-end)
-
-Citizen.CreateThread(function()
-    while true do
-        Citizen.Wait(60000)  -- Check every minute
-
+        Citizen.Wait(60000) -- Check every minute
         local currentDate = os.date("*t")
-        
         -- Daily Reset at Midnight
         if currentDate.hour == 0 and currentDate.min == 0 then
-            MySQL.insert("INSERT INTO bcc_leaderboard_history (player_id, player_displayName, playtime, leaderboard_type) " ..
-                        "SELECT id, players_displayName, players_dailyPlayTime, 'daily' FROM bcc_player_connections WHERE players_dailyPlayTime > 0")
-            MySQL.update("UPDATE bcc_player_connections SET players_dailyPlayTime = 0")
-            print("Daily playtime reset and snapshot completed.")
+            -- Record daily snapshot
+            MySQL.insert(
+                "INSERT INTO bcc_leaderboard_history (player_id, player_displayName, playtime, leaderboard_type) " ..
+                "SELECT id, players_displayName, players_dailyPlayTime, 'daily' FROM bcc_player_connections WHERE players_dailyPlayTime > 0",
+                {}, function()
+                    -- Add a wait time before resetting
+                    Citizen.Wait(6000) -- Wait 6 seconds before reset
+                    MySQL.update("UPDATE bcc_player_connections SET players_dailyPlayTime = 0", {}, function()
+                        print("Daily playtime reset and snapshot completed.")
+                    end)
+                end)
         end
 
         -- Weekly Reset on Monday at Midnight
-        if currentDate.wday == 2 and currentDate.hour == 0 and currentDate.min == 0 then  -- wday 2 = Monday
-        MySQL.insert("INSERT INTO bcc_leaderboard_history (player_id, player_displayName, playtime, leaderboard_type) " ..
-                    "SELECT id, players_displayName, players_weeklyPlayTime, 'weekly' FROM bcc_player_connections WHERE players_weeklyPlayTime > 0")
-        MySQL.update("UPDATE bcc_player_connections SET players_weeklyPlayTime = 0")
-        print("Weekly playtime reset and snapshot completed.")
-    end
+        if currentDate.wday == 2 and currentDate.hour == 0 and currentDate.min == 0 then
+            -- Record weekly snapshot
+            MySQL.insert(
+                "INSERT INTO bcc_leaderboard_history (player_id, player_displayName, playtime, leaderboard_type) " ..
+                "SELECT id, players_displayName, players_weeklyPlayTime, 'weekly' FROM bcc_player_connections WHERE players_weeklyPlayTime > 0",
+                {}, function()
+                    -- Add a wait time before resetting
+                    Citizen.Wait(6000) -- Wait 6 seconds before reset
+                    MySQL.update("UPDATE bcc_player_connections SET players_weeklyPlayTime = 0", {}, function()
+                        print("Weekly playtime reset and snapshot completed.")
+                    end)
+                end)
+        end
 
         -- Monthly Reset on the First of the Month at Midnight
         if currentDate.day == 1 and currentDate.hour == 0 and currentDate.min == 0 then
-        MySQL.insert("INSERT INTO bcc_leaderboard_history (player_id, player_displayName, playtime, leaderboard_type) " ..
-                    "SELECT id, players_displayName, players_monthlyPlayTime, 'monthly' FROM bcc_player_connections WHERE players_monthlyPlayTime > 0")
-        MySQL.update("UPDATE bcc_player_connections SET players_monthlyPlayTime = 0")
-        print("Monthly playtime reset and snapshot completed.")
+            -- Record monthly snapshot
+            MySQL.insert(
+                "INSERT INTO bcc_leaderboard_history (player_id, player_displayName, playtime, leaderboard_type) " ..
+                "SELECT id, players_displayName, players_monthlyPlayTime, 'monthly' FROM bcc_player_connections WHERE players_monthlyPlayTime > 0",
+                {}, function()
+                    -- Add a wait time before resetting
+                    Citizen.Wait(6000) -- Wait 6 seconds before reset
+                    MySQL.update("UPDATE bcc_player_connections SET players_monthlyPlayTime = 0", {}, function()
+                        print("Monthly playtime reset and snapshot completed.")
+                    end)
+                end)
         end
     end
 end)
@@ -448,7 +488,7 @@ AddEventHandler('bcc-userlog:fetchUserDetails', function(userID)
             -- Format dates on the server
             user.formattedLastConnection = os.date('%Y-%m-%d %H:%M:%S', user.players_tsLastConnection or 0)
             user.formattedJoined = os.date('%Y-%m-%d %H:%M:%S', user.players_tsJoined or 0)
-            
+
             -- Add 'steam:' prefix to steam_id when querying characters table
             local steamIdentifier = 'steam:' .. user.steam_id
 
@@ -513,9 +553,9 @@ RegisterServerEvent("bcc-userlog:AdminCheck", function()
     local _source, admin = source, false
     local character = Core.getUser(_source).getUsedCharacter
     if character.group == Config.adminGroup then
-      TriggerClientEvent("bcc-userlog:AdminClientCheck", _source, true)
+        TriggerClientEvent("bcc-userlog:AdminClientCheck", _source, true)
     end
-  end)
+end)
 
 --This is a TO DO
 -- Log aiming at another player
@@ -565,5 +605,3 @@ AddEventHandler('bcc-logs:npcAimLogs', function(npcType, weaponName)
     local logMessage = string.format("🔫 NPC Aiming Log: %s was aimed at by %s with weapon: %s", playerName, npcType, weaponName)
     discordWebhook:sendMessage(logMessage)
 end)]] --
-
-BccUtils.Versioner.checkFile(GetCurrentResourceName(), 'https://github.com/BryceCanyonCounty/bcc-userlog')
