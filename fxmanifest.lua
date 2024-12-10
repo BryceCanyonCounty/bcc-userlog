@@ -21,6 +21,7 @@ server_scripts {
     '@oxmysql/lib/MySQL.lua', -- oxmysql dependency
     'server/server.lua',
     'server/txAdminhandlers.lua'
+    'server/dbUpdater.lua'
 }
 
 version '1.0.2'
