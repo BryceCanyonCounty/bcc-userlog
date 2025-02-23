@@ -51,5 +51,7 @@ Locales['ro_lang'] = {
     no_data_available = 'Nicio informatie disponibila',
     backToLeaderboard = 'Inapoi la Clasament',
     additionalInfo = 'Aici va fi adaugata informatie',
-    
+        ---new
+    last_connection_playtime = "Tumaro paluno khelipesko vaxt sas: ",
+    last_connection_playtime_not_found = "Nashti te lav palpale o vaxt e palune sesiako. Mangav tumen te sigurinen kaj san registrime ki databaza.",
 }
