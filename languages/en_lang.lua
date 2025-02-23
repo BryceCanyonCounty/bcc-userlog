@@ -51,5 +51,7 @@ Locales['en_lang'] = {
     no_data_available = "No data available",
     backToLeaderboard = "Back to Leaderboard",
     additionalInfo = "Here will add some info",
-
+    ---new
+    last_connection_playtime = "Your last session playtime was: ",
+    last_connection_playtime_not_found = "Could not retrieve your last session time. Please ensure you are registered in the database.",
 }

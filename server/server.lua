@@ -301,10 +301,9 @@ RegisterCommand(Config.lastSessioncommand, function(source, args, rawCommand)
                 local formattedTime = string.format("%02d:%02d:%02d", hours, minutes, seconds)
 
                 -- Send the formatted session time to the player
-                Core.NotifyObjective(_source, "Your last session playtime was: " .. formattedTime, 4000)
+                Core.NotifyObjective(_source, _U("last_connection_playtime") .. formattedTime, 4000)
             else
-                Core.NotifyObjective(_source,
-                    "Could not retrieve your last session time. Please ensure you are registered in the database.", 4000)
+                Core.NotifyObjective(_source,_U("last_connection_playtime_not_found"), 4000)
             end
         end)
 end, false)
