@@ -52,6 +52,12 @@ Citizen.CreateThread(function()
     devPrint("Player fully loaded, triggering server event.")
     TriggerServerEvent('playerFullyLoaded')
 
+    local message = "^5Va rugam sa verificati clasamentul pentru a vedea daca sunteti eligibili pentru cadourile din top!\n^7Comanda este ^1/clasament"
+    TriggerEvent('chat:addMessage', {
+        color = {0, 0, 255}, -- Blue color
+        multiline = true,
+        args = {"[Hoinarii]", message}
+    })
     if Config.devMode then
         TriggerServerEvent('bcc-userlog:AdminCheck')
     end
@@ -522,46 +528,57 @@ function displayLeaderboardMenu(leaderboardData, leaderboardTitle)
         style = { fontSize = '24px', textAlign = 'center', color = '#FFD700' }
     })
 
-    -- Define HTML content for the leaderboard
     local leaderboardHTML = [[
-    <div style="padding: 40px;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr style="text-align: left;">
-                <th style="padding: 10px; color: #FFD700;">]] .. _U("rank") .. [[</th>
-                <th style="padding: 10px; color: #FFD700;">]] .. _U("player") .. [[</th>
-                <th style="padding: 10px; text-align: right; color: #FFD700;">]] .. _U("playtime") .. [[</th>
-            </tr>
+        <div style="padding: 40px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="text-align: left;">
+                    <th style="padding: 10px; color: #FFD700;">]] .. _U("rank") .. [[</th>
+                    <th style="padding: 10px; color: #FFD700;">]] .. _U("player") .. [[</th>
+                    <th style="padding: 10px; text-align: right; color: #FFD700;">]] .. _U("playtime") .. [[</th>
+                </tr>
     ]]
+    
 
     if #leaderboardData > 0 then
         for i, player in ipairs(leaderboardData) do
             local playerName = player.players_displayName or _U("unknown_user")
             local playTime = player.players_dailyPlayTime or player.players_weeklyPlayTime or player.players_monthlyPlayTime or 0
-
-            -- Format playtime as hours, minutes, and seconds
-            local hours = math.floor(playTime / 3600)
-            local minutes = math.floor((playTime % 3600) / 60)
-            local seconds = playTime % 60
-            local formattedPlayTime = string.format("%02d:%02d:%02d", hours, minutes, seconds)
-
-            -- Alternate row colors with opacity
-            local rowColor = i % 2 == 0 and "rgba(249, 249, 249, 0.3)" or "rgba(239, 239, 239, 0.3)"
-
-            -- Add each player's row to the table
-            leaderboardHTML = leaderboardHTML .. string.format([[<tr style="background-color: %s;">
-                <td style="padding: 8px;">%d</td>
-                <td style="padding: 8px;">%s</td>
-                <td style="padding: 8px; text-align: right;">%s</td>
-            </tr>]], rowColor, i, playerName, formattedPlayTime)
+    
+            if playTime > 0 then
+                -- Format playtime as hours, minutes, and seconds
+                local hours = math.floor(playTime / 3600)
+                local minutes = math.floor((playTime % 3600) / 60)
+                local seconds = playTime % 60
+                local formattedPlayTime = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+    
+                -- Alternate row colors with opacity
+                local rowColor = i % 2 == 0 and "rgba(249, 249, 249, 0.3)" or "rgba(239, 239, 239, 0.3)"
+    
+                -- Add each player's row to the table
+                leaderboardHTML = leaderboardHTML .. string.format([[<tr style="background-color: %s;">
+                    <td style="padding: 8px;">%d</td>
+                    <td style="padding: 8px;">%s</td>
+                    <td style="padding: 8px; text-align: right;">%s</td>
+                </tr>]], rowColor, i, playerName, formattedPlayTime)
+            end
+        end
+    
+        -- If no player has been added (i.e., all had playTime of zero), show 'no data available' message
+        if not leaderboardHTML:find("<tr") then  -- Assuming your HTML variable starts empty or resets before this code runs
+            leaderboardHTML = leaderboardHTML .. [[
+            <tr>
+                <td colspan="3" style="padding: 10px; text-align: center; color: #999;">]] .. _U("no_data_available") .. [[</td>
+            </tr>
+            ]]
         end
     else
         leaderboardHTML = leaderboardHTML .. [[
         <tr>
             <td colspan="3" style="padding: 10px; text-align: center; color: #999;">]] .. _U("no_data_available") .. [[</td>
         </tr>
-    ]]
+        ]]
     end
-
+    
     -- Close the table and div
     leaderboardHTML = leaderboardHTML .. "</table></div>"
 
@@ -590,7 +607,7 @@ function displayLeaderboardMenu(leaderboardData, leaderboardTitle)
     })
 
     TextDisplay = leaderboardMenu:RegisterElement('textdisplay', {
-        value = _U("additionalInfo"),
+        value = "Timpul de joc este calculat in : \n(zile:ore:minute)",
         style = { fontSize = '20px', textAlign = 'center', padding = '10px' },
         slot = "footer"
     })
