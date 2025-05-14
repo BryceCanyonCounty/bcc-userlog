@@ -51,5 +51,6 @@ Locales['ro_lang'] = {
     no_data_available = 'Nicio informatie disponibila',
     backToLeaderboard = 'Inapoi la Clasament',
     additionalInfo = 'Aici va fi adaugata informatie',
-    
+    chatMessage = "^5Va rugam sa verificati clasamentul pentru a vedea daca sunteti eligibili pentru cadourile din top!\n^7Comanda este ^1/clasament",
+    timePlayedinfo = "Timpul de joc este calculat in : \n(zile:ore:minute)"
 }

@@ -52,12 +52,14 @@ Citizen.CreateThread(function()
     devPrint("Player fully loaded, triggering server event.")
     TriggerServerEvent('playerFullyLoaded')
 
-    local message = "^5Va rugam sa verificati clasamentul pentru a vedea daca sunteti eligibili pentru cadourile din top!\n^7Comanda este ^1/clasament"
-    TriggerEvent('chat:addMessage', {
-        color = {0, 0, 255}, -- Blue color
-        multiline = true,
-        args = {"[Hoinarii]", message}
-    })
+    if Config.chatMessage then
+        local message = _U("chatMessage")
+        TriggerEvent('chat:addMessage', {
+            color = {0, 0, 255}, -- Blue color
+            multiline = true,
+            args = {"Info", message}
+        })
+    end
     if Config.devMode then
         TriggerServerEvent('bcc-userlog:AdminCheck')
     end
@@ -607,7 +609,7 @@ function displayLeaderboardMenu(leaderboardData, leaderboardTitle)
     })
 
     TextDisplay = leaderboardMenu:RegisterElement('textdisplay', {
-        value = "Timpul de joc este calculat in : \n(zile:ore:minute)",
+        value = _U('timePlayedinfo'),
         style = { fontSize = '20px', textAlign = 'center', padding = '10px' },
         slot = "footer"
     })

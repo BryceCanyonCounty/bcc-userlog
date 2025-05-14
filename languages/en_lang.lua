@@ -51,5 +51,6 @@ Locales['en_lang'] = {
     no_data_available = "No data available",
     backToLeaderboard = "Back to Leaderboard",
     additionalInfo = "Here will add some info",
-
+    chatMessage = "^5Please check the leaderboard to see if you are eligible for the top rewards!\n^7The command is ^1/leaderboard",
+    timePlayedinfo = "Playtime is calculated as: \n(days:hours:minutes)"
 }
