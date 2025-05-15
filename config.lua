@@ -14,4 +14,5 @@ Config = {
     WebhookTitle = 'BCC-UserSystemLog',
     WebhookAvatar = ''
     -----------------------------------------------------
+	chatMessage = true
 }

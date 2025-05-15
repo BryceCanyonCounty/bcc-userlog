@@ -134,8 +134,24 @@ function UpdateMonthlyPlaytime(license, playTime)
         end)
 end
 
--- Handle player connecting and check database for existing record
 AddEventHandler('playerConnecting', function(playerName, setKickReason, deferrals)
+    local _source = source
+    local playerName = GetPlayerName(_source)
+    local identifiers = GetPlayerIdentifiersData(_source)
+
+    if not identifiers.license then
+        local message23 = "❌ Unable to identify your license. Please restart your game."
+        setKickReason(message23)
+        discordWebhook:sendMessage("🚫 Player **" .. playerName .. "** was unable to connect: " .. message23)
+        CancelEvent()
+        return
+    end
+
+    -- ONLY check license here! DO NOT touch database or session yet.
+    devPrint("playerConnecting successful for license: " .. (identifiers.license or "N/A"))
+end)
+
+AddEventHandler('playerJoining', function()
     local _source = source
     local playerName = GetPlayerName(_source)
     local identifiers = GetPlayerIdentifiersData(_source)
@@ -143,14 +159,9 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
     local playerPing = GetPlayerPing(_source)
 
     if not identifiers.license then
-        local message23 = "❌ Unable to identify your license. Please restart your game."
-        setKickReason(message23)
-        discordWebhook:sendMessage("🚫 Player **" .. playerName .. "** was unable to connect: " .. message)
-        CancelEvent()
-        return
+        return -- No license? Should not happen here but be safe
     end
 
-    -- Store the connection time for session tracking
     playerSessionStart[identifiers.license] = { connectTime = os.time(), source = _source }
     devPrint("Player added to session with license:" .. (identifiers.license or "N/A"))
 
@@ -162,7 +173,6 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
         "IP: `" .. (playerIp or "N/A") .. "`\n" ..
         "Ping: `" .. tostring(playerPing or 0) .. "ms`"
 
-    -- Wrap sendMessage in pcall to catch any errors
     local success, err = pcall(function()
         discordWebhook:sendMessage("✅ Player **" .. playerName .. "** added to session.\n" .. identifierInfo)
     end)
@@ -171,27 +181,39 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
         print("Failed to send Discord message: " .. tostring(err))
     end
 
-    -- Optional: print to console for confirmation
-    devPrint("Player added to session with license:" .. (identifiers.license or "N/A"))
+    local tsLastConnection = os.time()
 
-    MySQL.query('SELECT id FROM bcc_player_connections WHERE license = ?', { identifiers.license }, function(result)
-        local tsLastConnection = os.time()
-
+    MySQL.query('SELECT id, players_displayName FROM bcc_player_connections WHERE license = ?', { identifiers.license }, function(result)
         if result and #result > 0 then
-            MySQL.update('UPDATE bcc_player_connections SET players_tsLastConnection = ? WHERE id = ?',
-                { tsLastConnection, result[1].id }, function(affectedRows)
-                    ---devPrint(message)
+            local dbName = result[1].players_displayName
+            if dbName ~= playerName then
+                -- Player name changed! Update it.
+                MySQL.update('UPDATE bcc_player_connections SET players_tsLastConnection = ?, players_displayName = ? WHERE id = ?', {
+                    tsLastConnection,
+                    playerName,
+                    result[1].id
+                }, function(affectedRows)
+                    if affectedRows > 0 then
+                        devPrint("Updated player name for license: " .. identifiers.license)
+                    end
                 end)
+            else
+                -- No name change, just update last connection timestamp
+                MySQL.update('UPDATE bcc_player_connections SET players_tsLastConnection = ? WHERE id = ?', {
+                    tsLastConnection,
+                    result[1].id
+                })
+            end
         else
             local playTime, tsJoined = 0, os.time()
             MySQL.insert(
                 'INSERT INTO bcc_player_connections (license, discord_id, steam_id, fivem_id, license2, live_id, xbl_id, players_displayName, players_playTime, players_tsJoined, players_tsLastConnection) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 {
-                    identifiers.license, identifiers.discord, identifiers.steam, identifiers.fivem, identifiers.license2,
-                    identifiers.live, identifiers.xbl, playerName, playTime, tsJoined, tsLastConnection
-                }, function(id)
-                    --devPrint(message)
-                end)
+                    identifiers.license, identifiers.discord, identifiers.steam, identifiers.fivem,
+                    identifiers.license2, identifiers.live, identifiers.xbl, playerName, playTime, tsJoined,
+                    tsLastConnection
+                }
+            )
         end
     end)
 end)
@@ -238,8 +260,7 @@ AddEventHandler('playerDropped', function(reason)
             tonumber(playerPing) or 0)
 
         -- Construct and send the session end message to Discord
-        local message = string.format("👋 Player **%s** disconnected. Reason: %s\n%s\nSession Duration: `%s`",
-            playerName or "Unknown", reason, identifierInfo, sessionTime)
+        local message = string.format("👋 Player **%s** disconnected. Reason: %s\n%s\nSession Duration: `%s`", playerName or "Unknown", reason, identifierInfo, sessionTime)
         discordWebhook:sendMessage(message)
 
         -- Remove the player from session tracking
@@ -402,6 +423,7 @@ end)
 CreateThread(function()
     while true do
         Citizen.Wait(60000) -- Check every minute
+        
         local currentDate = os.date("*t")
         -- Daily Reset at Midnight
         if currentDate.hour == 0 and currentDate.min == 0 then
@@ -416,6 +438,8 @@ CreateThread(function()
                         print("Daily playtime reset and snapshot completed.")
                     end)
                 end)
+                Citizen.Wait(6000)
+                ReinitializePlayers()
         end
 
         -- Weekly Reset on Monday at Midnight
@@ -431,6 +455,8 @@ CreateThread(function()
                         print("Weekly playtime reset and snapshot completed.")
                     end)
                 end)
+                Citizen.Wait(6000)
+                ReinitializePlayers()
         end
 
         -- Monthly Reset on the First of the Month at Midnight
@@ -446,6 +472,8 @@ CreateThread(function()
                         print("Monthly playtime reset and snapshot completed.")
                     end)
                 end)
+                Citizen.Wait(6000)
+                ReinitializePlayers()
         end
     end
 end)

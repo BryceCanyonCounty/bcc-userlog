@@ -34,9 +34,9 @@ Locales['ro_lang'] = {
     selectAnOption = 'Selecteaza o optiune pentru a continua.',
     noUsersAvailable = 'Niciun utilizator disponibil',
     selectAPlayer = 'Selecteaza un utilizator pentru a vedea detalii.',
-    yesterdayHistory = 'Clasamentul Zilnic de Ieri',
-    weeklyHistory = 'Clasamentul Saptamanal al Saptamanii Trecute',
-    monthlyHistory = 'Clasamentul Lunar al Lunii Trecute',
+    yesterdayHistory = 'Clasamentul de Ieri',
+    weeklyHistory = 'Clasamentul Saptamanii Trecute',
+    monthlyHistory = 'Clasamentul Lunii Trecute',
     select_leaderboard_type = 'Selecteaza Tipul de Clasament',
     daily_leaderboard = 'Clasament Zilnic',
     weekly_leaderboard = 'Clasament Saptamanal',
@@ -51,5 +51,6 @@ Locales['ro_lang'] = {
     no_data_available = 'Nicio informatie disponibila',
     backToLeaderboard = 'Inapoi la Clasament',
     additionalInfo = 'Aici va fi adaugata informatie',
-    
+    chatMessage = "^5Va rugam sa verificati clasamentul pentru a vedea daca sunteti eligibili pentru cadourile din top!\n^7Comanda este ^1/clasament",
+    timePlayedinfo = "Timpul de joc este calculat in : \n(zile:ore:minute)"
 }
