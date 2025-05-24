@@ -12,7 +12,7 @@ Config = {
     -- webhooks to log all the user stuff to discord
     Webhook ='',
     WebhookTitle = 'BCC-UserSystemLog',
-    WebhookAvatar = ''
+    WebhookAvatar = '',
     -----------------------------------------------------
 	chatMessage = true
 }
