@@ -20,6 +20,7 @@ client_scripts {
 server_scripts {
     '@oxmysql/lib/MySQL.lua', -- oxmysql dependency
     'server/server.lua',
+    'server/services/API.lua',
     'server/txAdminhandlers.lua',
     'server/dbUpdater.lua'
 }
